@@ -4,15 +4,16 @@ import pickle
 
 pos_tagger = Hannanum()
 
-def save():
-    save_classifier = open("naivebayes.pickle", "wb")
+def save(classifier):
+    save_classifier = open("radarconfig.pickle", "wb")
     pickle.dump(classifier, save_classifier)
     save_classifier.close()
 
 def load():
-    classifier_f = open("naivebayes.pickle", "rb")
-    classifier_new = pickle.load(classifier_f)
+    classifier_f = open("radarconfig.pickle", "rb")
+    classifier = pickle.load(classifier_f)
     classifier_f.close()
+    return classifier
 # https://dbrang.tistory.com/1268
 
 def tokenize(doc):
@@ -41,4 +42,8 @@ train_xy = [(term_exists(d), c) for d, c in train_docs]
 
 classifier = nltk.NaiveBayesClassifier.train(train_xy)
 
+#classifier = load()
+
 classifier.show_most_informative_features()
+
+#save(classifier)
