@@ -8,6 +8,7 @@ def save(classifier):
     save_classifier = open("radarconfig.pickle", "wb")
     pickle.dump(classifier, save_classifier)
     save_classifier.close()
+# https://dbrang.tistory.com/1268
 
 def load():
     classifier_f = open("radarconfig.pickle", "rb")
@@ -21,6 +22,11 @@ def tokenize(doc):
 
 def term_exists(doc):
     return {'exists({})'.format(word): (word in set(doc)) for word in tokens}
+
+def getvalue(classifier, test_sentence):
+    test_docs = tokenize(test_sentence)
+    test_sent_features = {word: (word in tokens) for word in test_docs}
+    return classifier.classify(test_sent_features)
 
 train = [("카지노사이트", "neg"),
          ("아이 적성검사 받으셨나요?", "neg"),
