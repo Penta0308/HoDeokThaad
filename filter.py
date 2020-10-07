@@ -10,11 +10,11 @@ from torch.utils.data import TensorDataset, DataLoader
 
 import modules
 
-fnt = ImageFont.truetype("D2Coding-Ver1.3.2-20180524.ttf", 16, encoding="UTF-8")
+fnt = ImageFont.truetype("D2Coding-Ver1.3.2-20180524.ttf", 32, encoding="UTF-8")
 
 
 def normalize(t: str):
-    im = Image.new("L", (384, 16), (0,))  # White
+    im = Image.new("L", (768, 32), (0,))  # White
     dr = ImageDraw.Draw(im)
     dr.text((0, 0), t, font=fnt, fill=(1,))
     return numpy.asarray(numpy.float32(im.split()[0]))
@@ -55,38 +55,36 @@ train_loader = DataLoader(train, batch_size=16, shuffle=True)
 class CNNClassifier(torch.nn.Module):
     def __init__(self):
         super(CNNClassifier, self).__init__()
-        conv1 = torch.nn.Conv2d(1, 6, 7, 1)  # 6@376*10, Block size 5
+        conv1 = torch.nn.Conv2d(1, 4, (2, 2), (2, 2))  # 4@384*16
         # activation ReLU
-        conv2 = torch.nn.Conv2d(6, 16, (3, 7), 1)  # 16@368*8
-        pool1 = torch.nn.MaxPool2d((1, 2))  #16@184*8
+        conv2 = torch.nn.Conv2d(4, 16, (2, 2), (2, 2))  # 16@192*8
         # activation ReLU
-        conv3 = torch.nn.Conv2d(16, 16, (2, 2), (2, 2))  # 16@92*4
-        # activation ReLU
-        conv4 = torch.nn.Conv2d(16, 8, (1, 2), (1, 2))  # 8@46*4
+        conv3 = torch.nn.Conv2d(16, 16, (1, 4), (1, 4))  # 16@48*8
 
         self.conv_module = torch.nn.Sequential(
             conv1,
-            torch.nn.LeakyReLU(),
+            torch.nn.ReLU(),
             conv2,
-            torch.nn.LeakyReLU(),
-            pool1,
-            conv3,
-            torch.nn.LeakyReLU(),
-            conv4
+            torch.nn.ReLU(),
+            conv3
         )
 
-        fc1 = torch.nn.Linear(8 * 46 * 4, 120)
+        fc1 = torch.nn.Linear(16 * 48 * 8, 120)
         # activation ReLU
         fc2 = torch.nn.Linear(120, 40)
         # activation ReLU
         fc3 = torch.nn.Linear(40, 10)
+        # activation ReLU
+        fc4 = torch.nn.Linear(10, 2)
 
         self.fc_module = torch.nn.Sequential(
             fc1,
-            torch.nn.LeakyReLU(),
+            torch.nn.ReLU(),
             fc2,
-            torch.nn.LeakyReLU(),
-            fc3
+            torch.nn.ReLU(),
+            fc3,
+            torch.nn.ReLU(),
+            fc4
         )
 
         if torch.cuda.is_available():
@@ -108,9 +106,9 @@ model = CNNClassifier()
 
 criterion = torch.nn.CrossEntropyLoss()
 
-optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 
-for epoch in range(15):
+for epoch in range(20):
     total_loss = 0
     for train_x, train_y in train_loader:
         train_x, train_y = torch.autograd.Variable(train_x), torch.autograd.Variable(train_y)
