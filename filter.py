@@ -1,3 +1,4 @@
+import pandas as pandas
 from PIL import Image, ImageFont, ImageDraw
 import torch
 import numpy
@@ -13,7 +14,7 @@ fnt = ImageFont.truetype("D2Coding-Ver1.3.2-20180524.ttf", 16, encoding="UTF-8")
 
 
 def normalize(t: str):
-    im = Image.new("1", (384, 16), (0,))  # White
+    im = Image.new("L", (384, 16), (0,))  # White
     dr = ImageDraw.Draw(im)
     dr.text((0, 0), t, font=fnt, fill=(1,))
     return numpy.asarray(numpy.float32(im.split()[0]))
@@ -27,68 +28,99 @@ def loadtraindata():
         with open(fd["file"], 'r', encoding="UTF-8") as f:
             line = f.readline()
             while line:
-                _data_x.append(normalize(line))
+                _data_x.append(numpy.asarray([normalize(line),]) / 255)
                 _data_y.append(fd["value"])
                 line = f.readline()
     return _data_x, _data_y
 
-
 data, label = loadtraindata()
+
+print(pandas.DataFrame(data[0][0]).shape)
+
 data = numpy.array(data, dtype='float32')
 label = numpy.array(label, dtype='int8')
 
 train_X, test_X, train_Y, test_Y = model_selection.train_test_split(data, label, test_size=0.1)
 
 train_X = torch.from_numpy(train_X).float()
-train_Y = torch.from_numpy(train_Y).byte()
+train_Y = torch.from_numpy(train_Y).long()
 
 test_X = torch.from_numpy(test_X).float()
-test_Y = torch.from_numpy(test_Y).byte()
+test_Y = torch.from_numpy(test_Y).long()
 
 train = TensorDataset(train_X, train_Y)
-train_loader = DataLoader(train, batch_size=32, shuffle=True)
+train_loader = DataLoader(train, batch_size=16, shuffle=True)
 
 
-class Net(torch.nn.Module):
+class CNNClassifier(torch.nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
+        super(CNNClassifier, self).__init__()
+        conv1 = torch.nn.Conv2d(1, 6, 7, 1)  # 6@376*10, Block size 5
+        # activation ReLU
+        conv2 = torch.nn.Conv2d(6, 16, (3, 7), 1)  # 16@368*8
+        pool1 = torch.nn.MaxPool2d((1, 2))  #16@184*8
+        # activation ReLU
+        conv3 = torch.nn.Conv2d(16, 16, (2, 2), (2, 2))  # 16@92*4
+        # activation ReLU
+        conv4 = torch.nn.Conv2d(16, 8, (1, 2), (1, 2))  # 8@46*4
 
-        self.conv1 = torch.nn.Conv2d(1, 10, 5)
-        self.conv2 = torch.nn.Conv2d(10, 20, 5)
+        self.conv_module = torch.nn.Sequential(
+            conv1,
+            torch.nn.LeakyReLU(),
+            conv2,
+            torch.nn.LeakyReLU(),
+            pool1,
+            conv3,
+            torch.nn.LeakyReLU(),
+            conv4
+        )
 
-        self.fc1 = torch.nn.Linear(20 * 2 * 93, 50)  # 2=(((((16-5)+1)/2)-5)+1)/2, 93=(((((384-5)+1)/2)-5)+1)/2
-        self.fc2 = torch.nn.Linear(50, 2)
+        fc1 = torch.nn.Linear(8 * 46 * 4, 120)
+        # activation ReLU
+        fc2 = torch.nn.Linear(120, 40)
+        # activation ReLU
+        fc3 = torch.nn.Linear(40, 10)
+
+        self.fc_module = torch.nn.Sequential(
+            fc1,
+            torch.nn.LeakyReLU(),
+            fc2,
+            torch.nn.LeakyReLU(),
+            fc3
+        )
+
+        if torch.cuda.is_available():
+            self.conv_module = self.conv_module.cuda()
+            self.fc_module = self.fc_module.cuda()
 
     def forward(self, x):
-        x = torch.nn.functional.max_pool2d(torch.nn.functional.relu(self.conv1(x)), 2)
-        x = torch.nn.functional.max_pool2d(torch.nn.functional.relu(self.conv2(x)), 2)
-        x = x.view(-1, 20 * 2 * 93)
-        x = torch.nn.functional.relu(self.fc1(x))
-        x = self.fc2(x)
-        return torch.nn.functional.log_softmax(x, dim=1)
+        out = self.conv_module(x)  # 16@4*4
+        # make linear
+        dim = 1
+        for d in out.size()[1:]:
+            dim = dim * d
+        out = out.view(-1, dim)
+        out = self.fc_module(out)
+        return torch.nn.functional.softmax(out, dim=1)
 
 
-model = Net()
+model = CNNClassifier()
 
 criterion = torch.nn.CrossEntropyLoss()
 
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
 
-for epoch in range(50):
+for epoch in range(15):
     total_loss = 0
     for train_x, train_y in train_loader:
         train_x, train_y = torch.autograd.Variable(train_x), torch.autograd.Variable(train_y)
         optimizer.zero_grad()
         output = model(train_x)
-        print(output)
-        print(train_x)
-        print(train_y)
         loss = criterion(output, train_y)
         loss.backward()
         optimizer.step()
         total_loss += loss.data.item()
-    if (epoch + 1) % 10 == 0:
-        print(epoch + 1, total_loss)
+    print(epoch + 1, total_loss)
 
 test_x, test_y = torch.autograd.Variable(test_X), torch.autograd.Variable(test_Y)
 result = torch.max(model(test_x).data, 1)[1]
