@@ -5,6 +5,7 @@ import numpy
 from sklearn import model_selection
 import sqlite3
 from pprint import pprint
+import hgtk
 
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -12,8 +13,13 @@ import modules
 
 fnt = ImageFont.truetype("D2Coding-Ver1.3.2-20180524.ttf", 32, encoding="UTF-8")
 
-
 def normalize(t: str):
+    u = []
+    for i in t:
+        if hgtk.checker.is_hangul(i):
+            i = hgtk.letter.decompose(i)
+        u += i
+    t = ''.join(u)
     im = Image.new("L", (768, 32), (0,))  # White
     dr = ImageDraw.Draw(im)
     dr.text((0, 0), t, font=fnt, fill=(1,))
