@@ -1,0 +1,7 @@
+flask
+hgtk
+scikit-learn
+numpy
+torch:1.6.0
+pillow
+pandas

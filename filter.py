@@ -3,15 +3,16 @@ from PIL import Image, ImageFont, ImageDraw
 import torch
 import numpy
 from sklearn import model_selection
-import sqlite3
-from pprint import pprint
 import hgtk
+import flask
 
 from torch.utils.data import TensorDataset, DataLoader
 
 import modules
 
 fnt = ImageFont.truetype("D2Coding-Ver1.3.2-20180524.ttf", 32, encoding="UTF-8")
+
+webserver = flask.Flask("HoDeokThaad")
 
 def normalize(t: str):
     u = []
@@ -130,3 +131,13 @@ test_x, test_y = torch.autograd.Variable(test_X), torch.autograd.Variable(test_Y
 result = torch.max(model(test_x).data, 1)[1]
 accuracy = sum(test_y.data.numpy() == result.numpy()) / len(test_y.data.numpy())
 print(accuracy)
+
+@webserver.route("/evaluate/<t>")
+def flask_eval(t):
+    r = normalize(t)
+    r = torch.from_numpy(r).float()
+    r = r.unsqueeze(0)
+    r = r.unsqueeze(0)
+    return str(model(r).data)
+
+webserver.run(host="0.0.0.0", port=modules.config_get("port"))
