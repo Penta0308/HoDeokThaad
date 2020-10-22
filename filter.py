@@ -77,11 +77,11 @@ train_loader = DataLoader(train, batch_size=16, shuffle=True)
 class CNNClassifier(torch.nn.Module):
     def __init__(self):
         super(CNNClassifier, self).__init__()
-        conv1 = torch.nn.Conv2d(1, 64, (2, 2), (2, 2))  # 4@384*16
+        conv1 = torch.nn.Conv2d(1, 1024, (32, 64), (1, 2))  # 4@25*2
         # activation ReLU
-        conv2 = torch.nn.Conv2d(64, 256, (2, 2), (2, 2))  # 16@192*8
+        conv2 = torch.nn.Conv2d(1024, 8192, (2, 6), (1, 1))  # 16@20*1
         # activation ReLU
-        conv3 = torch.nn.Conv2d(256, 512, (1, 4), (1, 4))  # 16@48*8
+        conv3 = torch.nn.Conv2d(8192, 16384, (1, 6), (1, 1))  # 16@15*1
 
         self.conv_module = torch.nn.Sequential(
             conv1,
@@ -91,7 +91,7 @@ class CNNClassifier(torch.nn.Module):
             conv3
         )
 
-        fc1 = torch.nn.Linear(512 * 48 * 8, 120)
+        fc1 = torch.nn.Linear(16384 * 15 * 1, 1200)
         # activation ReLU
         fc2 = torch.nn.Linear(1200, 400)
         # activation ReLU
