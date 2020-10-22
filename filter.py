@@ -25,7 +25,7 @@ def normalize(t: str):
             i = hgtk.letter.decompose(i)
         u += i
     t = ''.join(u)
-    print(t)
+    #print(t)
     im = Image.new("L", (768, 32), (0,))  # White
     dr = ImageDraw.Draw(im)
     dr.text((0, 0), t, font=fnt, fill=(1,))
@@ -77,11 +77,11 @@ train_loader = DataLoader(train, batch_size=16, shuffle=True)
 class CNNClassifier(torch.nn.Module):
     def __init__(self):
         super(CNNClassifier, self).__init__()
-        conv1 = torch.nn.Conv2d(1, 1024, (32, 64), (1, 2))  # 4@25*1
+        conv1 = torch.nn.Conv2d(1, 1024, (32, 64), (1, 16))  # 4@45*1
         # activation ReLU
-        conv2 = torch.nn.Conv2d(1024, 8192, (1, 6), (1, 1))  # 16@20*1
+        conv2 = torch.nn.Conv2d(1024, 4096, (1, 16), (1, 1))  # 16@30*1
         # activation ReLU
-        conv3 = torch.nn.Conv2d(8192, 16384, (1, 6), (1, 1))  # 16@15*1
+        conv3 = torch.nn.Conv2d(4096, 8192, (1, 16), (1, 1))  # 16@15*1
 
         self.conv_module = torch.nn.Sequential(
             conv1,
@@ -91,7 +91,7 @@ class CNNClassifier(torch.nn.Module):
             conv3
         )
 
-        fc1 = torch.nn.Linear(16384 * 15 * 1, 1200)
+        fc1 = torch.nn.Linear(8192 * 15 * 1, 1200)
         # activation ReLU
         fc2 = torch.nn.Linear(1200, 400)
         # activation ReLU
