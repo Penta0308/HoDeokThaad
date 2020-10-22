@@ -77,9 +77,9 @@ train_loader = DataLoader(train, batch_size=16, shuffle=True)
 class CNNClassifier(torch.nn.Module):
     def __init__(self):
         super(CNNClassifier, self).__init__()
-        conv1 = torch.nn.Conv2d(1, 1024, (32, 64), (1, 2))  # 4@25*2
+        conv1 = torch.nn.Conv2d(1, 1024, (32, 64), (1, 2))  # 4@25*1
         # activation ReLU
-        conv2 = torch.nn.Conv2d(1024, 8192, (2, 6), (1, 1))  # 16@20*1
+        conv2 = torch.nn.Conv2d(1024, 8192, (1, 6), (1, 1))  # 16@20*1
         # activation ReLU
         conv3 = torch.nn.Conv2d(8192, 16384, (1, 6), (1, 1))  # 16@15*1
 
