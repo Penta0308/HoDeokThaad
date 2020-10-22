@@ -97,7 +97,7 @@ class CNNClassifier(torch.nn.Module):
         # activation ReLU
         fc3 = torch.nn.Linear(400, 80)
         # activation ReLU
-        fc4 = torch.nn.Linear(10, 2)
+        fc4 = torch.nn.Linear(80, 2)
 
         self.fc_module = torch.nn.Sequential(
             fc1,
