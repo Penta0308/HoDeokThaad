@@ -5,6 +5,7 @@ import numpy
 from sklearn import model_selection
 import hgtk
 import flask
+from urllib import parse
 
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -153,6 +154,7 @@ print(accuracy)
 
 @webserver.route("/evaluate/<t>")
 def flask_eval(t):
+    t = parse.unquote(t)
     r = normalize(t)
     r = torch.from_numpy(r).float()
     r = r.unsqueeze(0)
