@@ -147,6 +147,7 @@ txd = test_x.data
 if iscuda:
     tyd = tyd.cpu()
     txd = txd.cpu()
+    result = result.cpu()
 accuracy = sum(tyd.numpy() == result.numpy()) / len(txd.numpy())
 print(accuracy)
 
