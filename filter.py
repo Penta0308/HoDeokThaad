@@ -128,7 +128,7 @@ criterion = torch.nn.CrossEntropyLoss()
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 
-for epoch in range(20):
+for epoch in range(modules.config_get("aicount")):
     total_loss = 0
     for train_x, train_y in train_loader:
         train_x, train_y = torch.autograd.Variable(train_x), torch.autograd.Variable(train_y)
@@ -142,7 +142,12 @@ for epoch in range(20):
 
 test_x, test_y = torch.autograd.Variable(test_X), torch.autograd.Variable(test_Y)
 result = torch.max(model(test_x).data, 1)[1]
-accuracy = sum(test_y.data.numpy() == result.numpy()) / len(test_y.data.numpy())
+tyd = test_y.data
+txd = test_x.data
+if iscuda:
+    tyd = tyd.cpu()
+    txd = txd.cpu()
+accuracy = sum(tyd.numpy() == result.numpy()) / len(txd.numpy())
 print(accuracy)
 
 @webserver.route("/evaluate/<t>")
@@ -153,6 +158,8 @@ def flask_eval(t):
     r = r.unsqueeze(0)
     if iscuda:
         r = r.cuda()
-    return str(model(r).data)
+        return str(model(r).data.cpu())
+    else:
+        return str(model(r).data)
 
 webserver.run(host="0.0.0.0", port=modules.config_get("port"))
