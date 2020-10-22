@@ -10,6 +10,9 @@ from torch.utils.data import TensorDataset, DataLoader
 
 import modules
 
+
+iscuda = torch.cuda.is_available()
+
 fnt = ImageFont.truetype("D2Coding-Ver1.3.2-20180524.ttf", 32, encoding="UTF-8")
 
 webserver = flask.Flask("HoDeokThaad")
@@ -49,11 +52,21 @@ label = numpy.array(label, dtype='int8')
 
 train_X, test_X, train_Y, test_Y = model_selection.train_test_split(data, label, test_size=0.1)
 
-train_X = torch.from_numpy(train_X).float()
-train_Y = torch.from_numpy(train_Y).long()
+train_X = torch.from_numpy(train_X)
+train_Y = torch.from_numpy(train_Y)
+test_X = torch.from_numpy(test_X)
+test_Y = torch.from_numpy(test_Y)
 
-test_X = torch.from_numpy(test_X).float()
-test_Y = torch.from_numpy(test_Y).long()
+if iscuda:
+    train_X = train_X.cuda()
+    train_Y = train_Y.cuda()
+    test_X = test_X.cuda()
+    test_Y = test_Y.cuda()
+
+train_X = train_X.float()
+train_Y = train_Y.long()
+test_X = test_X.float()
+test_Y = test_Y.long()
 
 train = TensorDataset(train_X, train_Y)
 train_loader = DataLoader(train, batch_size=16, shuffle=True)
@@ -94,7 +107,7 @@ class CNNClassifier(torch.nn.Module):
             fc4
         )
 
-        if torch.cuda.is_available():
+        if iscuda:
             self.conv_module = self.conv_module.cuda()
             self.fc_module = self.fc_module.cuda()
 
@@ -138,6 +151,8 @@ def flask_eval(t):
     r = torch.from_numpy(r).float()
     r = r.unsqueeze(0)
     r = r.unsqueeze(0)
+    if iscuda:
+        r = r.cuda()
     return str(model(r).data)
 
 webserver.run(host="0.0.0.0", port=modules.config_get("port"))
