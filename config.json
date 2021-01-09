@@ -1,14 +1,4 @@
 {
-  "aidb": [
-    {
-        "file": "ad.txt",
-        "value": 1
-    },
-    {
-        "file": "not_ad.txt",
-        "value": 0
-    }
-    ],
   "port": 8080,
-  "aicount": 1000
+  "aicount": 3
 }
