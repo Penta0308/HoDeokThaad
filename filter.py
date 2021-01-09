@@ -226,16 +226,21 @@ for epoch in range(N_EPOCHS):
     print(f'\t Val. Loss: {valid_loss:.3f} |  Val. Acc: {valid_acc * 100:.2f}%')
 
 webserver = flask.Flask("HoDeokThaad")
-
+webserver.config['JSON_AS_ASCII'] = False
 
 @webserver.route("/evaluate")
 def flask_eval():
+    resp = {}
     try:
         t = tokenizer(parse.unquote(request.args['t']))
     except KeyError:
-        return "Give ME GET t Arg"
+        resp['code'] = 400
+        return flask.jsonify(resp)
+
     if len(t) == 0:
-        return str(0.0)
+        resp['code'] = 500
+        return flask.jsonify(resp)
+
     eval_data = data.Dataset(
         [data.Example.fromlist([t, "0"], fields=[('text', TEXT), ('label', LABEL)]), ],
         fields={'text': TEXT, 'label': LABEL})
@@ -247,10 +252,13 @@ def flask_eval():
         sort_within_batch=True,
         device=device)[0]
 
+    resp['code'] = 200
+    resp['data'] = {'token': t}
+
     with torch.no_grad():
         for batch in eval_iterator:
-            r = torch.sigmoid(model(batch.text).squeeze(1)[0])
-            return str(float(r) * -1.0)
+            resp['data']['rate'] = float(torch.sigmoid(model(batch.text).squeeze(1)[0])) * -1.0
+            return flask.jsonify(resp)
 
 
 webserver.run(host="0.0.0.0", port=modules.config_get("port"))
