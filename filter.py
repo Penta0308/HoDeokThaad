@@ -228,7 +228,7 @@ for epoch in range(N_EPOCHS):
 webserver = flask.Flask("HoDeokThaad")
 webserver.config['JSON_AS_ASCII'] = False
 
-@webserver.route("/evaluate")
+@webserver.route("/")
 def flask_eval():
     resp = {}
     try:
