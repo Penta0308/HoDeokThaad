@@ -232,7 +232,7 @@ webserver.config['JSON_AS_ASCII'] = False
 def flask_eval():
     resp = {}
     try:
-        t = tokenizer(parse.unquote(request.args['t']))
+        t = tokenizer(parse.unquote(request.args['t'], encoding='UTF-8'))
     except KeyError:
         resp['code'] = 400
         return flask.jsonify(resp)
