@@ -257,7 +257,7 @@ def flask_eval():
 
     with torch.no_grad():
         for batch in eval_iterator:
-            resp['data']['rate'] = float(torch.sigmoid(model(batch.text).squeeze(1)[0])) * -1.0
+            resp['data']['rate'] = 1.0 - float(torch.sigmoid(model(batch.text).squeeze(1)[0]))
             return flask.jsonify(resp)
 
 
