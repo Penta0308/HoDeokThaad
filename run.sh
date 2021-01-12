@@ -1,2 +1,2 @@
 cd ~kkfbot/HoDeokThaad
-python3.7 filter.py
+python3.7 production.py

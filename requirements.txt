@@ -1,8 +1,8 @@
 flask
 hgtk
-scikit-learn
 numpy
 torch:1.6.0
 pillow
 pandas
-torchtext
+torchtext:0.7.0
+pytorch-transformers:1.2.0
