@@ -6,4 +6,4 @@
 
 ## 요구사항
 https://github.com/jpype-project/jpype/releases/tag/v0.7.5, KoNLPy, nltk 깔 것.  
-+ `pip install -r requirements.txt`
+\+ `pip install -r requirements.txt`
